@@ -1,0 +1,43 @@
+#version 410 core
+layout (vertices = 3) out;
+layout (location = 0) in vec3 tc_position[];
+layout (location = 1) in vec2 tc_uv[];
+layout (location = 2) in vec3 tc_normal[];
+layout (location = 0) out vec3 te_position[];
+layout (location = 1) out vec2 te_uv[];
+layout (location = 2) out vec3 te_normal[];
+
+uniform vec3 camPos;
+
+float get_tess_level(float Distance0, float Distance1)
+{
+     float AvgDistance = (Distance0 + Distance1) / 2.0;
+
+    if (AvgDistance <= 300.0) {
+       return 7.0;
+    }
+    else if (AvgDistance <= 500.0) {
+        return 3.0;
+    }
+    else {
+       return 1.0;
+   }
+
+}
+
+void main()
+{
+    float eyeToV0 = distance(camPos, tc_position[0]);
+    float eyeToV1 = distance(camPos, tc_position[1]);
+    float eyeToV2 = distance(camPos, tc_position[2]);
+    if (gl_InvocationID == 0) {
+      gl_TessLevelOuter[0] = get_tess_level(eyeToV1, eyeToV2);
+      gl_TessLevelOuter[1] = get_tess_level(eyeToV2, eyeToV0);
+      gl_TessLevelOuter[2] = get_tess_level(eyeToV0, eyeToV1);
+      gl_TessLevelInner[0] = gl_TessLevelOuter[2];
+    }
+
+    te_position[gl_InvocationID] = tc_position[gl_InvocationID];
+    te_uv[gl_InvocationID] = tc_uv[gl_InvocationID];
+    te_normal[gl_InvocationID] = tc_normal[gl_InvocationID];
+}
